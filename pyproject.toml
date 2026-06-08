@@ -9,5 +9,8 @@ dependencies = [
     "python-dotenv>=1.0",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
 [tool.setuptools]
 packages = ["harness", "harness.providers"]

@@ -190,6 +190,7 @@ checker, the stated-claim heuristic, and both judges. They need no API key and
 run either way:
 
 ```bash
+pip install -e ".[dev]"      # pulls in pytest
 python -m pytest tests/      # if pytest is installed
 python tests/test_smoke.py   # stdlib only, no dependencies
 ```
