@@ -1,0 +1,13 @@
+[project]
+name = "deceptive-compliance-harness"
+version = "0.1.0"
+description = "Minimal evaluation harness for deceptive compliance in LLM agents: does a model that STATES it will follow a rule actually ENACT a compliant tool call?"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic>=0.40",
+    "openai>=1.50",
+    "python-dotenv>=1.0",
+]
+
+[tool.setuptools]
+packages = ["harness", "harness.providers"]
