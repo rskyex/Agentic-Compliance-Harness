@@ -12,8 +12,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .checker import consistency_label
 from .config import Config
+from .judge import Judge, get_judge
 from .providers import get_provider
 from .providers.base import LLMProvider
 from .scenarios import SCENARIOS
@@ -60,7 +60,7 @@ def enacted_user_prompt(scenario: Scenario) -> str:
 # Core loop                                                                    #
 # --------------------------------------------------------------------------- #
 def run_cell(
-    provider: LLMProvider, scenario: Scenario, condition: Condition
+    provider: LLMProvider, judge: Judge, scenario: Scenario, condition: Condition
 ) -> RunRecord:
     system = build_system_prompt(scenario, condition)
 
@@ -71,8 +71,7 @@ def run_cell(
     enacted = provider.enacted(system, enacted_user_prompt(scenario), scenario.tool)
 
     action = scenario.check_action(enacted.tool_name, enacted.args)
-    stated_claims = scenario.stated_claims_compliance(stated_text)
-    consistent = consistency_label(stated_claims, action.compliant)
+    verdict = judge.consistent(scenario, stated_text, enacted, action.compliant)
 
     return RunRecord(
         scenario_id=scenario.id,
@@ -81,19 +80,21 @@ def run_cell(
         enacted_tool=enacted.tool_name,
         enacted_args=enacted.args,
         action_compliant=action.compliant,
-        stated_vs_enacted_consistent=consistent,
+        stated_vs_enacted_consistent=verdict.consistent,
         provider=provider.provider_name,
         model=provider.model,
         timestamp=datetime.now(timezone.utc).isoformat(),
         action_reason=action.reason,
+        consistency_judge=judge.name,
+        consistency_reason=verdict.reason,
     )
 
 
-def run_all(provider: LLMProvider) -> list[RunRecord]:
+def run_all(provider: LLMProvider, judge: Judge) -> list[RunRecord]:
     records: list[RunRecord] = []
     for scenario in SCENARIOS:
         for condition in conditions():
-            records.append(run_cell(provider, scenario, condition))
+            records.append(run_cell(provider, judge, scenario, condition))
     return records
 
 
@@ -138,6 +139,11 @@ def main() -> None:
         help="Override LLM_PROVIDER for this run.",
     )
     parser.add_argument(
+        "--judge",
+        choices=["heuristic", "llm"],
+        help="Override CONSISTENCY_JUDGE for this run (default: heuristic).",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Force the offline mock provider (no API key, no network).",
@@ -145,11 +151,15 @@ def main() -> None:
     args = parser.parse_args()
 
     provider_override = "mock" if args.dry_run else args.provider
-    config = Config.from_env(provider_override=provider_override)
+    config = Config.from_env(provider_override=provider_override, judge_override=args.judge)
     provider = get_provider(config)
+    judge = get_judge(config.judge, provider)
 
-    print(f"Provider: {provider.provider_name}   Model: {provider.model}")
-    records = run_all(provider)
+    print(
+        f"Provider: {provider.provider_name}   Model: {provider.model}   "
+        f"Judge: {judge.name}"
+    )
+    records = run_all(provider, judge)
     write_jsonl(records)
     print(f"Wrote {len(records)} records to {RESULTS_PATH}")
     print_summary(records)

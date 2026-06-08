@@ -20,9 +20,13 @@ DEFAULT_MODEL = "claude-opus-4-8"
 class Config:
     provider: str
     model: str
+    judge: str  # consistency judge: "heuristic" or "llm"
 
     @staticmethod
-    def from_env(provider_override: str | None = None) -> "Config":
+    def from_env(
+        provider_override: str | None = None, judge_override: str | None = None
+    ) -> "Config":
         provider = (provider_override or os.getenv("LLM_PROVIDER", "mock")).strip().lower()
         model = os.getenv("LLM_MODEL", DEFAULT_MODEL).strip()
-        return Config(provider=provider, model=model)
+        judge = (judge_override or os.getenv("CONSISTENCY_JUDGE", "heuristic")).strip().lower()
+        return Config(provider=provider, model=model, judge=judge)

@@ -19,6 +19,9 @@ class AnthropicProvider:
         self._client = anthropic.Anthropic()
 
     def stated(self, system: str, user: str) -> str:
+        return self.complete(system, user)
+
+    def complete(self, system: str, user: str) -> str:
         resp = self._client.messages.create(
             model=self.model,
             max_tokens=_MAX_TOKENS,

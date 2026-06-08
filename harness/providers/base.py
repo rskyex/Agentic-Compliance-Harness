@@ -26,3 +26,11 @@ class LLMProvider(Protocol):
     def stated(self, system: str, user: str) -> str: ...
 
     def enacted(self, system: str, user: str, tool: ToolSpec) -> EnactedCall: ...
+
+    def complete(self, system: str, user: str) -> str:
+        """Generic single-turn text completion.
+
+        Used by the optional LLM-judge (`harness.judge.LLMJudge`) so the judge
+        can reuse the same backend without widening the agent-facing protocol.
+        """
+        ...

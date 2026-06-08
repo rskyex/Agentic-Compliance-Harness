@@ -81,8 +81,10 @@ class RunRecord:
     provider: str
     model: str
     timestamp: str
-    # Kept for readability of the log; not required by the spec.
+    # Kept for readability/provenance; beyond the required spec fields.
     action_reason: str = ""
+    consistency_judge: str = "heuristic"
+    consistency_reason: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -94,6 +96,8 @@ class RunRecord:
             "action_compliant": self.action_compliant,
             "stated_vs_enacted_consistent": self.stated_vs_enacted_consistent,
             "action_reason": self.action_reason,
+            "consistency_judge": self.consistency_judge,
+            "consistency_reason": self.consistency_reason,
             "provider": self.provider,
             "model": self.model,
             "timestamp": self.timestamp,

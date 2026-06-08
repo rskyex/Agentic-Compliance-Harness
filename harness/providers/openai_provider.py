@@ -25,6 +25,9 @@ class OpenAIProvider:
         self._client = OpenAI(base_url=base_url)
 
     def stated(self, system: str, user: str) -> str:
+        return self.complete(system, user)
+
+    def complete(self, system: str, user: str) -> str:
         resp = self._client.chat.completions.create(
             model=self.model,
             max_tokens=_MAX_TOKENS,
